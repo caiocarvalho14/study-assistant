@@ -8,7 +8,7 @@ import type {
   DisciplinaComContagem,
 } from "@/types/estudos";
 
-function fail(error: PostgrestError): never {
+export function fail(error: PostgrestError): never {
   if (error.code === "23503") {
     throw new Error("Este item possui dados vinculados e não pôde ser excluído.");
   }

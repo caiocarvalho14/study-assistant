@@ -51,6 +51,17 @@ const navItems: NavItem[] = [
       </Icon>
     ),
   },
+  {
+    label: "Preparações",
+    href: "/preparacoes",
+    disabled: false,
+    icon: (
+      <Icon>
+        <path d="M4 22V4" />
+        <path d="M4 4h13l-2.5 4L17 12H4" />
+      </Icon>
+    ),
+  },
 ];
 
 export function Sidebar() {
@@ -109,9 +120,8 @@ export function Sidebar() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               title={item.label}
-              className={`${base} ${
-                active ? "bg-blue-500 text-white " : "text-gray-500 hover:bg-gray-200 hover:text-black"
-              }`}
+              className={`${base} ${active ? "bg-blue-500 text-white " : "text-gray-500 hover:bg-gray-200 hover:text-black"
+                }`}
             >
               {item.icon}
               <span className="hidden md:inline">{item.label}</span>

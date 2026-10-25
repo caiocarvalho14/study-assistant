@@ -79,3 +79,25 @@ export const UploadIcon = (p: IconProps) => (
     <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
   </Base>
 );
+
+export const CalendarIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <path d="M16 2v4M8 2v4M3 10h18" />
+  </Base>
+);
+
+export const FlagIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M4 22V4" />
+    <path d="M4 4h13l-2.5 4L17 12H4" />
+  </Base>
+);
+
+export const ExternalLinkIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M15 3h6v6" />
+    <path d="M10 14 21 3" />
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+  </Base>
+);
