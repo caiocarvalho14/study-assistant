@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { btnGhost, btnPrimary, inputClass } from "@/lib/ui";
+import { btnPrimary, inputClass } from "@/lib/ui";
 
 type ItemFormProps = {
   titlePlaceholder: string;
@@ -73,7 +73,7 @@ export function ItemForm({
               {saving ? "Salvando…" : submitLabel}
             </button>
             {onCancel && (
-              <button type="button" onClick={onCancel} disabled={saving} className={btnGhost}>
+              <button type="button" onClick={onCancel} disabled={saving} className={btnPrimary}>
                 Cancelar
               </button>
             )}
@@ -97,7 +97,7 @@ export function ItemForm({
               {saving ? "Salvando…" : submitLabel}
             </button>
             {onCancel && (
-              <button type="button" onClick={onCancel} disabled={saving} className={btnGhost}>
+              <button type="button" onClick={onCancel} disabled={saving} className={btnPrimary}>
                 Cancelar
               </button>
             )}
