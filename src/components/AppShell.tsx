@@ -25,8 +25,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       <Sidebar />
-      <main className="pl-16 md:pl-64">
-        <div className="mx-auto max-w-4xl px-6 py-12 md:px-10">{children}</div>
+      <main className="pl-16 md:pl-64 ">
+        <div className="mx-auto max-w-4xl px-6 py-12 md:px-10 ">{children}</div>
       </main>
     </div>
   );
