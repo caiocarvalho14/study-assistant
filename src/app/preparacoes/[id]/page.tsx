@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { Alert } from "@/components/Alert";
+import { BlocosModal } from "@/components/BlocosModal";
 import { ConfirmModal } from "@/components/modal/Confirmmodal";
 import { FieldsModal } from "@/components/FiledsModal";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -17,7 +18,8 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@/components/icons";
-import { avaliacaoFields, blocoFields, preparacaoFields } from "@/lib/campos";
+import { avaliacaoFields, preparacaoFields } from "@/lib/campos";
+import { salvarBlocos, type BlocoChanges } from "@/lib/blocos";
 import {
   diasAte,
   formatarData,
@@ -29,14 +31,11 @@ import { agruparPorMateria, percentual, somar } from "@/lib/desempenho";
 import { errorMessage, listDisciplinas } from "@/lib/estudos";
 import {
   createAvaliacao,
-  createBloco,
   deleteAvaliacao,
-  deleteBloco,
   getPreparacao,
   listAvaliacoes,
   listBlocos,
   updateAvaliacao,
-  updateBloco,
   updatePreparacao,
 } from "@/lib/preparacoes";
 import { btnPrimary, btnSecondary, iconBtn, iconBtnDanger } from "@/lib/ui";
@@ -52,8 +51,7 @@ type ModalState =
   | { kind: "preparacao-form" }
   | { kind: "avaliacao-form"; avaliacao?: Avaliacao }
   | { kind: "avaliacao-delete"; avaliacao: Avaliacao }
-  | { kind: "bloco-form"; avaliacao: Avaliacao; bloco?: BlocoComDisciplina }
-  | { kind: "bloco-delete"; bloco: BlocoComDisciplina }
+  | { kind: "blocos"; avaliacao: Avaliacao }
   | null;
 
 export default function PreparacaoPage() {
@@ -104,22 +102,17 @@ function PreparacaoContent() {
 
   const desempenho = useMemo(() => agruparPorMateria(blocos), [blocos]);
   const geral = useMemo(() => somar(blocos), [blocos]);
-  const blocoFieldList = useMemo(
-    () => blocoFields(disciplinas.map((d) => ({ id: d.id, nome: d.nome }))),
-    [disciplinas],
-  );
 
   const avaliacaoForm = modal?.kind === "avaliacao-form" ? modal : null;
   const avaliacaoDelete = modal?.kind === "avaliacao-delete" ? modal.avaliacao : null;
-  const blocoForm = modal?.kind === "bloco-form" ? modal : null;
-  const blocoDelete = modal?.kind === "bloco-delete" ? modal.bloco : null;
+  const blocosModal = modal?.kind === "blocos" ? modal : null;
 
   async function savePreparacao(values: Record<string, string>) {
     await updatePreparacao(id, {
       cargo: values.cargo,
       banca: values.banca,
       url: normalizeUrl(values.url) ?? "",
-      instituicao: values.instituicao
+      instituicao: values.instituicao,
     });
     await load();
   }
@@ -140,22 +133,17 @@ function PreparacaoContent() {
     await load();
   }
 
-  async function saveBloco(values: Record<string, string>) {
-    if (!blocoForm) return;
-    const total = Number(values.total);
-    const acertos = Number(values.acertos);
+  async function saveBlocos(changes: BlocoChanges) {
+    if (!blocosModal) return;
 
-    if (blocoForm.bloco) {
-      await updateBloco(blocoForm.bloco.id, values.disciplina, total, acertos);
-    } else {
-      await createBloco(blocoForm.avaliacao.id, values.disciplina, total, acertos);
+    try {
+      await salvarBlocos(blocosModal.avaliacao.id, changes);
+    } catch (err) {
+      await load();
+      throw new Error(
+        `${errorMessage(err)} Algumas alterações podem ter sido salvas: feche e reabra para conferir.`,
+      );
     }
-    await load();
-  }
-
-  async function removeBloco() {
-    if (!blocoDelete) return;
-    await deleteBloco(blocoDelete.id);
     await load();
   }
 
@@ -257,7 +245,7 @@ function PreparacaoContent() {
               Datas das provas e o resultado de cada bloco de questões.
             </p>
           </div>
-          <button onClick={() => setModal({ kind: "avaliacao-form" })} className={btnPrimary} disabled={avaliacoes.length>=1}>
+          <button onClick={() => setModal({ kind: "avaliacao-form" })} className={btnPrimary} disabled={avaliacoes.length>=0}>
             <PlusIcon className="size-4" />
             Adicionar prova
           </button>
@@ -284,6 +272,7 @@ function PreparacaoContent() {
 
               const blocosDaProva = blocos.filter((b) => b.avaliacao_id === avaliacao.id);
               const totalProva = somar(blocosDaProva);
+              const semBlocos = blocosDaProva.length === 0;
 
               return (
                 <li key={avaliacao.id} className="px-5 py-4">
@@ -331,6 +320,12 @@ function PreparacaoContent() {
 
                     <div className="flex shrink-0 gap-1">
                       <button
+                        onClick={() => setModal({ kind: "blocos", avaliacao })}
+                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-100/60"
+                      >
+                        {semBlocos ? "Lançar blocos" : "Editar blocos"}
+                      </button>
+                      <button
                         onClick={() => setModal({ kind: "avaliacao-form", avaliacao })}
                         aria-label="Editar prova"
                         title="Editar"
@@ -347,86 +342,6 @@ function PreparacaoContent() {
                         <TrashIcon className="size-4" />
                       </button>
                     </div>
-                  </div>
-
-                  <div className="mt-4 rounded-xl bg-gray-50 p-3 sm:ml-16">
-                    <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-gray-700">Blocos de questões</h3>
-                        {blocosDaProva.length > 0 && (
-                          <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium tabular-nums text-gray-600 ring-1 ring-gray-200">
-                            {totalProva.acertos}/{totalProva.total} (
-                            {percentual(totalProva.acertos, totalProva.total)}%)
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setModal({ kind: "bloco-form", avaliacao })}
-                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-100/60"
-                      >
-                        <PlusIcon className="size-4" />
-                        Adicionar bloco
-                      </button>
-                    </div>
-
-                    {blocosDaProva.length === 0 ? (
-                      <p className="px-1 pb-1 pt-2 text-sm text-gray-500">
-                        Nenhum bloco lançado. Registre o resultado por matéria, por exemplo
-                        Português, 20 de 30.
-                      </p>
-                    ) : (
-                      <ul className="mt-2 space-y-2">
-                        {blocosDaProva.map((bloco) => {
-                          const acertos = bloco.questoes_acertadas ?? 0;
-                          const total = bloco.questoes_total ?? 0;
-                          const pct = percentual(acertos, total);
-                          const nome = bloco.disciplina?.nome ?? "Sem matéria";
-
-                          return (
-                            <li
-                              key={bloco.id}
-                              className="rounded-lg bg-white px-3 py-2.5 ring-1 ring-gray-200"
-                            >
-                              <div className="flex items-center gap-3">
-                                <p className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900">
-                                  {nome}
-                                </p>
-                                <p className="text-sm tabular-nums">
-                                  <span className="font-semibold text-gray-900">{acertos}</span>
-                                  <span className="text-gray-400">/{total}</span>
-                                </p>
-                                <span className="w-10 text-right text-xs font-medium tabular-nums text-blue-700">
-                                  {pct}%
-                                </span>
-                                <div className="flex gap-0.5">
-                                  <button
-                                    onClick={() =>
-                                      setModal({ kind: "bloco-form", avaliacao, bloco })
-                                    }
-                                    aria-label={`Editar bloco de ${nome}`}
-                                    title="Editar"
-                                    className={iconBtn}
-                                  >
-                                    <PencilIcon className="size-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => setModal({ kind: "bloco-delete", bloco })}
-                                    aria-label={`Excluir bloco de ${nome}`}
-                                    title="Excluir"
-                                    className={iconBtnDanger}
-                                  >
-                                    <TrashIcon className="size-4" />
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="mt-2">
-                                <ProgressBar value={pct} label={`Aproveitamento em ${nome}`} />
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
                   </div>
                 </li>
               );
@@ -494,7 +409,7 @@ function PreparacaoContent() {
           cargo: preparacao.cargo ?? "",
           banca: preparacao.banca_organizadora ?? "",
           url: preparacao.url_do_edital ?? "",
-          instituicao: preparacao.instituicao??""
+          instituicao: preparacao.instituicao ?? "",
         }}
         submitLabel="Salvar"
         onSubmit={savePreparacao}
@@ -514,25 +429,20 @@ function PreparacaoContent() {
         onSubmit={saveAvaliacao}
       />
 
-      <FieldsModal
-        open={blocoForm !== null}
+      <BlocosModal
+        open={blocosModal !== null}
         onClose={closeModal}
-        title={blocoForm?.bloco ? "Editar bloco de questões" : "Novo bloco de questões"}
+        title="Blocos de questões"
         description={
-          disciplinas.length === 0
-            ? "Você ainda não tem matérias. Cadastre uma em Matérias antes de lançar um bloco."
-            : blocoForm?.avaliacao.data_prova
-              ? `Resultado de uma matéria na prova de ${formatarData(blocoForm.avaliacao.data_prova)}. Ex.: Português, 20 acertos de 30.`
-              : "Resultado de uma matéria nesta prova. Ex.: Português, 20 acertos de 30."
+          blocosModal?.avaliacao.data_prova
+            ? `Resultado por matéria na prova de ${formatarData(blocosModal.avaliacao.data_prova)}. Ex.: Português, 20 acertos de 30.`
+            : "Resultado por matéria nesta prova. Ex.: Português, 20 acertos de 30."
         }
-        fields={blocoFieldList}
-        initialValues={{
-          disciplina: blocoForm?.bloco?.disciplina_id ?? "",
-          total: String(blocoForm?.bloco?.questoes_total ?? ""),
-          acertos: String(blocoForm?.bloco?.questoes_acertadas ?? ""),
-        }}
-        submitLabel={blocoForm?.bloco ? "Salvar" : "Adicionar bloco"}
-        onSubmit={saveBloco}
+        disciplinas={disciplinas.map((d) => ({ id: d.id, nome: d.nome }))}
+        blocos={
+          blocosModal ? blocos.filter((b) => b.avaliacao_id === blocosModal.avaliacao.id) : []
+        }
+        onSave={saveBlocos}
       />
 
       <ConfirmModal
@@ -549,23 +459,6 @@ function PreparacaoContent() {
           </>
         }
         onConfirm={removeAvaliacao}
-      />
-
-      <ConfirmModal
-        open={blocoDelete !== null}
-        onClose={closeModal}
-        title="Excluir bloco de questões"
-        message={
-          <>
-            Tem certeza que deseja excluir o bloco de{" "}
-            <strong className="font-medium text-gray-900">
-              {blocoDelete?.disciplina?.nome ?? "matéria removida"}
-            </strong>{" "}
-            ({blocoDelete?.questoes_acertadas ?? 0}/{blocoDelete?.questoes_total ?? 0})? Essa ação
-            não pode ser desfeita.
-          </>
-        }
-        onConfirm={removeBloco}
       />
     </>
   );

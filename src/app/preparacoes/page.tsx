@@ -28,6 +28,7 @@ import {
 import { btnPrimary, iconBtn, iconBtnDanger } from "@/lib/ui";
 import { normalizeUrl } from "@/lib/url";
 import type { PreparacaoComAvaliacoes } from "@/types/estudos";
+import { listBlocos } from "@/lib/preparacoes";
 
 type ModalState =
   | { kind: "form"; item?: PreparacaoComAvaliacoes }
@@ -48,11 +49,14 @@ function PreparacoesContent() {
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
 
+
+
   const closeModal = useCallback(() => setModal(null), []);
 
   const load = useCallback(async () => {
     try {
       setItems(await listPreparacoes());
+      
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -72,7 +76,7 @@ function PreparacoesContent() {
       cargo: values.cargo,
       banca: values.banca,
       url: normalizeUrl(values.url) ?? "",
-      instituicao:values.instituicao
+      instituicao: values.instituicao
     };
 
     if (formModal?.item) {
@@ -109,7 +113,7 @@ function PreparacoesContent() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Preparações</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Cada preparação reúne o concurso ou a prova para a qual você está estudando.
+            Cada preparação se resume ao concurso ou a prova para a qual você está estudando.
           </p>
         </div>
         <button onClick={() => setModal({ kind: "form" })} className={btnPrimary}>
@@ -193,7 +197,7 @@ function PreparacoesContent() {
                     {item.cargo ?? "Sem cargo"}
                   </Link>
                 </h2>
-                <p className="mt-0.5 truncate text-sm text-gray-500">
+                <p className="my-1 truncate text-sm text-gray-500">
                   {item.instituicao ?? "Instituição não informada"} / {item.banca_organizadora ?? "Banca não informada"}
                 </p>
 
@@ -201,7 +205,7 @@ function PreparacoesContent() {
                   {prova ? (
                     <div className="flex items-start gap-2">
                       <CalendarIcon className="mt-0.5 size-4 shrink-0 text-blue-600" />
-                      <div>
+                      <div>l
                         <p className="text-sm font-medium text-gray-900">
                           {rotuloProva(prova.dias)}
                         </p>
@@ -247,7 +251,7 @@ function PreparacoesContent() {
           cargo: formModal?.item?.cargo ?? "",
           banca: formModal?.item?.banca_organizadora ?? "",
           url: formModal?.item?.url_do_edital ?? "",
-          instituicao: formModal?.item?.instituicao?? ""
+          instituicao: formModal?.item?.instituicao ?? ""
         }}
         submitLabel={formModal?.item ? "Salvar" : "Criar preparação"}
         onSubmit={handleSave}

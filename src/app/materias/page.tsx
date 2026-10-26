@@ -162,15 +162,24 @@ function MateriasContent() {
             return (
               <li
                 key={item.id}
-                className="group relative rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md focus-within:border-blue-400 focus-within:shadow-md"
+                className="group relative rounded-2xl border border-gray-200 bg-white p-5  transition hover:border-blue-300 hover:shadow-md focus-within:border-blue-400 focus-within:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span
-                    aria-hidden
-                    className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-base font-semibold text-blue-600"
-                  >
-                    {initial}
-                  </span>
+
+                  <div>
+                    <h2 className="truncate text-base font-semibold text-gray-900">
+                      <Link
+                        href={`/materias/${item.id}`}
+                        className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none"
+                      >
+                        {item.nome}
+                      </Link>
+                    </h2>
+
+                    <span className="mt-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                      {total === 1 ? "1 conteúdo" : `${total} conteúdos`}
+                    </span>
+                  </div>
 
                   <div className="relative z-10 flex gap-1">
                     <button
@@ -190,20 +199,10 @@ function MateriasContent() {
                       <TrashIcon className="size-4" />
                     </button>
                   </div>
+
                 </div>
 
-                <h2 className="mt-4 truncate text-base font-semibold text-gray-900">
-                  <Link
-                    href={`/materias/${item.id}`}
-                    className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none"
-                  >
-                    {item.nome}
-                  </Link>
-                </h2>
 
-                <span className="mt-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                  {total === 1 ? "1 conteúdo" : `${total} conteúdos`}
-                </span>
               </li>
             );
           })}

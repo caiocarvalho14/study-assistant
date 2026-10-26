@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
+import { House, Book , ClockPlus , Flag , Layers} from "lucide-react";
+
 type NavItem = {
   label: string;
   href: string;
@@ -35,9 +37,7 @@ const navItems: NavItem[] = [
     label: "Início",
     href: "/",
     icon: (
-      <Icon>
-        <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
-      </Icon>
+      <House></House>
     ),
   },
   {
@@ -45,10 +45,7 @@ const navItems: NavItem[] = [
     href: "/materias",
     disabled: false,
     icon: (
-      <Icon>
-        <path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z" />
-        <path d="M4 20a2 2 0 0 1 2-2h13v3H6a2 2 0 0 1-2-1z" />
-      </Icon>
+      <Book></Book>
     ),
   },
   {
@@ -56,12 +53,23 @@ const navItems: NavItem[] = [
     href: "/preparacoes",
     disabled: false,
     icon: (
-      <Icon>
-        <path d="M4 22V4" />
-        <path d="M4 4h13l-2.5 4L17 12H4" />
-      </Icon>
+      <Flag></Flag>
     ),
   },
+  {
+    label: "Sessões",
+    href: "/sessoes",
+    disabled: false,
+    icon: (
+      <ClockPlus></ClockPlus>
+    ),
+  },
+  {
+  label: "Flashcards",
+  href: "/flashcards",
+  disabled: false,
+  icon: <Layers className="size-5 shrink-0" />,
+},
 ];
 
 export function Sidebar() {

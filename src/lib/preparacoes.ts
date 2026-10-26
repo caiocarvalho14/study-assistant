@@ -8,6 +8,7 @@ import type {
   PreparacaoComAvaliacoes,
 } from "@/types/estudos";
 
+
 const orNull = (value: string) => (value.trim() ? value.trim() : null);
 
 export type PreparacaoInput = { banca: string; cargo: string; url: string, instituicao: string };
