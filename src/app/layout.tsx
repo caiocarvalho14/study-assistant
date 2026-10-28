@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Public_Sans } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
+import { TimerWidget } from "@/components/timer/TimerWidget";
 
 const publicSans = Public_Sans({
   subsets: ["latin"],
@@ -17,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={publicSans.variable}>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>{children}<TimerWidget/></AuthProvider>
       </body>
     </html>
   );
